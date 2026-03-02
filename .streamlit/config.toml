@@ -12,3 +12,10 @@ enableXsrfProtection = true
 
 [browser]
 gatherUsageStats = false
+
+[ui]
+hideSidebarNav = false
+
+[client]
+showSidebarNavigation = true
+toolbarMode = "minimal"
