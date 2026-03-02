@@ -27,6 +27,18 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+# Forzar sidebar siempre visible y botón colapsar oculto
+st.markdown("""
+<style>
+  [data-testid="collapsedControl"] { display: none !important; }
+  section[data-testid="stSidebar"] {
+      display: block !important;
+      min-width: 270px !important;
+      width: 270px !important;
+  }
+</style>
+""", unsafe_allow_html=True)
+
 # ─────────────────────────────────────────────
 # PALETA DE COLORES EOL PERÚ
 # ─────────────────────────────────────────────
@@ -1193,15 +1205,34 @@ def main():
 
     st.markdown(f'<hr style="border-color:{COL_AMARILLO};margin:8px 0 16px">', unsafe_allow_html=True)
 
-    # ── Sidebar y filtros
+    # ── Cargador principal (pantalla central si no hay datos)
     if not data:
-        st.warning("""
-        ### 📂 No hay datos cargados
-        **Pasos para iniciar:**
-        1. En la barra lateral, sube el archivo **.zip** con los Excels de EOL Perú.
-        2. O coloca el ZIP en la carpeta `data/` junto a `app.py`.
-        3. El dashboard se actualizará automáticamente.
-        """)
+        st.markdown(f"""
+        <div style='background:{COL_BLANCO};border:2px solid {COL_AMARILLO};border-radius:14px;
+                    padding:30px 40px;max-width:600px;margin:40px auto;text-align:center'>
+          <div style='font-size:3rem'>📂</div>
+          <h2 style='color:{COL_AZUL}'>Cargar datos EOL Perú</h2>
+          <p style='color:#666'>Sube el archivo <b>.zip</b> con los 4 Excels de Febrero 2026<br>
+          para activar el dashboard completo.</p>
+        </div>
+        """, unsafe_allow_html=True)
+        col_a, col_b, col_c = st.columns([1,2,1])
+        with col_b:
+            uploaded_main = st.file_uploader(
+                "📤 Selecciona tu archivo ZIP o Excel",
+                type=["zip","xlsx"],
+                key="uploader_main",
+                help="Sube el ZIP con los 4 archivos Excel de EOL Perú"
+            )
+            if uploaded_main:
+                with st.spinner("⏳ Procesando datos..."):
+                    try:
+                        new_data = load_data(uploaded_main.read(), uploaded_main.name)
+                        st.session_state["raw_data"] = new_data
+                        st.success("✅ ¡Datos cargados! Recargando dashboard...")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Error al cargar: {e}")
         st.stop()
 
     fi, ff, placas_sel = render_sidebar(data)
@@ -1228,3 +1259,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
